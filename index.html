@@ -27,6 +27,11 @@
   <a href="https://www.pixelinspiration.com/news" target="_blank" rel="noopener">View all posts →</a>
 </div>
 <script>
+function extractImg(html) {
+  const match = html && html.match(/<img[^>]+src="([^"]+)"/);
+  return match ? match[1] : '';
+}
+
 async function load() {
   const grid = document.getElementById('grid');
   try {
@@ -35,11 +40,11 @@ async function load() {
     const items = data.items || [];
     if (!items.length) throw new Error('No posts');
     items.forEach(item => {
-      const link = item.url || item.link || '#';
-      const excerpt = (item.summary || item.content_text || '').replace(/<[^>]+>/g, '').slice(0, 120) + '…';
-      const img = item.image || item.banner_image || '';
+      const link = item.url || '#';
+      const excerpt = (item.content_text || '').slice(0, 120) + '…';
+      const img = extractImg(item.content_html);
       const date = item.date_published ? new Date(item.date_published).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-      const author = item.author?.name || 'Pixel Inspiration';
+      const author = (item.authors && item.authors[0]?.name) || 'Pixel Inspiration';
       const a = document.createElement('a');
       a.className = 'card';
       a.href = link;
