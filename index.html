@@ -4,65 +4,231 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pixel Inspiration News</title>
+
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: transparent; color: #1a1a1a; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; padding: 4px; }
-  .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; text-decoration: none; color: inherit; transition: box-shadow 0.15s, border-color 0.15s; }
-  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #bbb; }
-  .card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #f0f0f0; }
-  .card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; gap: 8px; }
-  .card-title { font-size: 14px; font-weight: 600; line-height: 1.4; color: #111; }
-  .card-excerpt { font-size: 12.5px; color: #555; line-height: 1.55; flex: 1; }
-  .card-meta { font-size: 11.5px; color: #888; }
-  .view-all { text-align: center; margin-top: 20px; padding-bottom: 4px; }
-  .view-all a { font-size: 13px; color: #444; text-decoration: none; border: 1px solid #ddd; border-radius: 6px; padding: 7px 18px; display: inline-block; transition: background 0.15s; }
-  .view-all a:hover { background: #f5f5f5; }
-  .error { font-size: 13px; color: #888; padding: 1rem 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: transparent;
+    color: #1a1a1a;
+    padding: 4px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow .15s, border-color .15s;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    border-color: #bbb;
+  }
+
+  .card-img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    display: block;
+    background: #f0f0f0;
+  }
+
+  .card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 8px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #111;
+  }
+
+  .card-excerpt {
+    font-size: 12.5px;
+    color: #555;
+    line-height: 1.55;
+    flex: 1;
+  }
+
+  .card-meta {
+    font-size: 11.5px;
+    color: #888;
+  }
+
+  .view-all {
+    text-align: center;
+    margin-top: 20px;
+    padding-bottom: 4px;
+  }
+
+  .view-all a {
+    font-size: 13px;
+    color: #444;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 7px 18px;
+    display: inline-block;
+  }
+
+  .view-all a:hover {
+    background: #f5f5f5;
+  }
+
+  .status {
+    font-size: 12px;
+    color: #999;
+    padding: 8px 0;
+  }
 </style>
 </head>
-<body>
-<div class="grid" id="grid"></div>
-<div class="view-all">
-  <a href="https://www.pixelinspiration.com/news" target="_blank" rel="noopener">View all posts →</a>
-</div>
-<script>
-function extractImg(html) {
-  const match = html && html.match(/<img[^>]+src="([^"]+)"/);
-  return match ? match[1] : '';
-}
 
+<body>
+
+<p class="status" id="status">Loading...</p>
+
+<div class="grid" id="grid"></div>
+
+<div class="view-all">
+  <a href="https://www.pixelinspiration.com/news" target="_blank" rel="noopener">
+    View all posts →
+  </a>
+</div>
+
+<script>
 async function load() {
   const grid = document.getElementById('grid');
+  const status = document.getElementById('status');
+
   try {
     const res = await fetch('https://rss.app/feeds/P9XoBnx8K6Tg92FF.json');
+
+    if (!res.ok) {
+      throw new Error('HTTP ' + res.status);
+    }
+
     const data = await res.json();
-    const items = data.items || [];
-    if (!items.length) throw new Error('No posts');
-    items.forEach(item => {
-      const link = item.url || '#';
-      const excerpt = (item.content_text || '').slice(0, 120) + '…';
-      const img = extractImg(item.content_html);
-      const date = item.date_published ? new Date(item.date_published).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-      const author = (item.authors && item.authors[0]?.name) || 'Pixel Inspiration';
-      const a = document.createElement('a');
-      a.className = 'card';
-      a.href = link;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.innerHTML = (img ? `<img src="${img}" alt="" loading="lazy">` : '')
-        + `<div class="card-body">
-            <div class="card-title">${item.title || ''}</div>
-            <div class="card-excerpt">${excerpt}</div>
-            <div class="card-meta">${date}${author ? ' · ' + author : ''}</div>
-           </div>`;
-      grid.appendChild(a);
+
+    const allItems = data.items || [];
+
+    // Keep English posts only
+    const items = allItems.filter(item => {
+      const lang = (item.language || '').toLowerCase();
+
+      if (lang) {
+        return lang.startsWith('en');
+      }
+
+      // Fallback when RSS feed doesn't provide language
+      const text = `${item.title || ''} ${item.content_text || ''}`;
+      const nonAscii = (text.match(/[^\x00-\x7F]/g) || []).length;
+
+      return nonAscii < text.length * 0.1;
     });
-  } catch(e) {
-    grid.innerHTML = '<p class="error">Could not load posts. <a href="https://www.pixelinspiration.com/news" target="_blank">Visit the blog →</a></p>';
+
+    status.textContent = 'Loaded ' + items.length + ' English posts';
+
+    items.forEach(function(item) {
+      const link = item.url || '#';
+      const title = item.title || '';
+
+      const excerpt = (item.content_text || '')
+        .replace(/<[^>]+>/g, '')
+        .trim()
+        .slice(0, 120) + '…';
+
+      const date = item.date_published
+        ? new Date(item.date_published).toLocaleDateString(
+            'en-GB',
+            { day: 'numeric', month: 'short', year: 'numeric' }
+          )
+        : '';
+
+      const author =
+        item.authors && item.authors.length
+          ? item.authors[0].name
+          : 'Pixel Inspiration';
+
+      let imgUrl = '';
+
+      if (item.content_html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = item.content_html;
+
+        const imgEl = tmp.querySelector('img');
+
+        if (imgEl) {
+          imgUrl = imgEl.getAttribute('src') || '';
+        }
+      }
+
+      const card = document.createElement('a');
+      card.className = 'card';
+      card.href = link;
+      card.target = '_blank';
+      card.rel = 'noopener noreferrer';
+
+      if (imgUrl) {
+        const img = document.createElement('img');
+        img.className = 'card-img';
+        img.src = imgUrl;
+        img.alt = title;
+        img.loading = 'lazy';
+        card.appendChild(img);
+      }
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+
+      body.innerHTML =
+        '<div class="card-title">' + title + '</div>' +
+        '<div class="card-excerpt">' + excerpt + '</div>' +
+        '<div class="card-meta">' +
+        date +
+        (author ? ' · ' + author : '') +
+        '</div>';
+
+      card.appendChild(body);
+      grid.appendChild(card);
+    });
+
+    if (!items.length) {
+      status.textContent = 'No English posts found.';
+    }
+
+  } catch (e) {
+    status.textContent = 'Error: ' + e.message;
+
+    grid.innerHTML =
+      '<p style="color:#888;font-size:13px">' +
+      'Could not load posts. ' +
+      '<a href="https://www.pixelinspiration.com/news" target="_blank">' +
+      'Visit the blog →' +
+      '</a>' +
+      '</p>';
   }
 }
+
 load();
 </script>
+
 </body>
 </html>
